@@ -7,17 +7,35 @@ import csv
 from datetime import datetime
 from preview import make_preview
 
-runDate = datetime.now()
+'''
+This file will lithograph (yes, that's the verb form) an array of images into a 
+prepared sample of PMMA coated on a conductive surface. It also produces two 
+files for user-friendliness: a CSV log and a PNG preview.
+
+The CSV log contains all the information provided by the user in the lists 
+below. Image name, total exposure time, and magnification, as well as exposure 
+per pixel are all contained in the log and can be easily extracted. The preview 
+is created by extracting these data from the log.
+
+The preview shows an imitation of the lithograph. The images shown are not to 
+scale, but they are in order, and can serve as a sort of "map" for the 
+lithograph. Some details about each image are displayed as text in the preview.
+
+For simpler uses, no edits will be needed after magnificationsArray is 
+initialized (line 50-60 or so). It would not be too difficult, however, to 
+extend the capabilities to more parameters of the microscope, like spot size.
+'''
+
 
 simulator_mode = True
-logFileName = 'silicon1.csv' # path for the log file
-offset = [-0.15e-3, 0.625e-3] # starting position [x,y] relative to scratch mark (meters)
-increment = [-0.15e-3, 0.25e-3] # array spacing [x,y] (meters)
+logFileName = 'silicon1' # name for log and preview files
+offset = [0.0e-3, 0.625e-3] # starting position [x,y] relative to scratch mark (meters)
+increment = [0.15e-3, 0.25e-3] # array spacing [x,y] (meters)
 accel_voltage = 15000 # float from 5k to 15k (Volts)
 spotSize = 1.0 # float from 1.0 to 10.0 (Amps/sqrt[Volts])
 
 imagePathsArray = [  # paths for the image files
-        ['HD_vassar_seal.png', 'LD_vassar_seal.png', 'vassar_seal.png'],
+        ['HD_vassar_seal.png', 'LD_vassar_seal.png', 'vassar_seal.png']*3,
         ['VC_outline.png']*10,
         ['holes/2048.png']*20,
         ['holes/2048.png']*20,
@@ -42,6 +60,7 @@ magnificationsArray = [ # magnification controls real size of lithograph (doesn'
     ]
 
 
+runDate = datetime.now()
 beam_current = spotSize * np.sqrt(accel_voltage) # derived current (Amps)
 
 # check that there are the right number of each parameter
@@ -56,12 +75,12 @@ if not (
     raise Exception('Inconsistent shapes of parameter lists.')
 
 # open a log file
-logFile = open('logs/' + logFileName, 'a', newline='')
+logFile = open('logs/' + logFileName + '.csv', 'a', newline='')
 
 # set up log writer and write datetime as well as header row
 logWriter = csv.writer(logFile, delimiter=',')
 logWriter.writerow([runDate.strftime('%Y-%m-%d %H:%M:%S')])
-logWriter.writerow(['x (mm)','y (mm)','image_filename','exposure_time (s)','max_dwelltime (s)'])
+logWriter.writerow(['x (mm)','y (mm)','image_filename','exposure_time (s)','max_dwelltime (s)','magnification'])
 
 # make the parts of the pattern that will stay the same
 pat = ppi.Patterning.BitmapScanPattern()
@@ -147,7 +166,7 @@ for y in range(len(exposureTimesArray)):
         phenom.MoveBy(increment[0]/2.0, 0)
         
         # write to log file
-        logWriter.writerow(['%.3f' % (1e3*(pos.x - og_pos.x)), '%.3f' % (1e3*(pos.y - og_pos.y)), imagePaths[x], exposureTimes[x], dwellTime])
+        logWriter.writerow(['%.3f' % (1e3*(pos.x - og_pos.x)), '%.3f' % (1e3*(pos.y - og_pos.y)), imagePaths[x], exposureTimes[x], dwellTime, magnifications[x]])
 
 phenom.MoveTo(og_pos)
 
@@ -157,3 +176,4 @@ phenom.SetSemViewingMode(vm)
 logFile.close()
 
 make_preview(logFileName)
+
