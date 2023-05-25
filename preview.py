@@ -3,6 +3,16 @@ import csv
 
 pix_per_mm = 1000 # pixels per mm (the code doesn't like it when we do larger numbers like 1500 for this)
 
+
+def formatter(row):
+    if float(row[4]) >= 1:
+        return '%s\n%ss total\n%.2fs/pix\n%sx mag' % (row[2], row[3], float(row[4]), row[5])
+    elif float(row[4]) >= 0.001:
+        return '%s\n%ss total\n%.2fms/pix\n%sx mag' % (row[2], row[3], float(row[4])*1e3, row[5])
+    else:
+        return '%s\n%ss total\n%.2f\u03bcs/pix\n%sx mag' % (row[2], row[3], float(row[4])*1e6, row[5])
+
+
 def make_preview(logFileName):
     '''
     This function produces a map of the photoresist. It uses the CSV log file 
@@ -102,15 +112,6 @@ def make_preview(logFileName):
     )
 
     font.size = int(0.014 * pix_per_mm)
-
-    def formatter(row):
-        if float(row[4]) >= 1:
-            return '%s\n%ss total\n%.2fs/pix\n%sx mag' % (row[2], row[3], float(row[4]), row[5])
-        elif float(row[4]) >= 0.001:
-            return '%s\n%ss total\n%.2fms/pix\n%sx mag' % (row[2], row[3], float(row[4])*1e3, row[5])
-        else:
-            return '%s\n%ss total\n%.2f\u03bcs/pix\n%sx mag' % (row[2], row[3], float(row[4])*1e6, row[5])
-
 
     file = open('logs/' + logFileName + '.csv', 'r', newline='')
     logReader = csv.reader(file, delimiter=',')
